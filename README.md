@@ -1,60 +1,75 @@
-# xor
+# XOR Tool
 
-A simple Python utility for XOR operations on files.
+A fast Unix-style command-line utility for XOR operations on files.
+
+[![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](LICENSE)
 
 ## Overview
 
-`xor` is a command-line tool that XORs two files together, padding the shorter file with zeros to match the longer one. The tool automatically strips trailing zero bytes from the output to maintain exact file sizes during roundtrip operations.
-
-The tool is useful for cryptographic analysis, data transformation, and understanding XOR-based encryption schemes.
+The XOR tool performs XOR operations on two files. 
 
 ```bash
-./xor.py nonsense.jpg key.bin > out.jpg
+./xor nonsense.jpg key.bin > out.jpg
 ```
 
-## Installation
+By default, this tool pads the shorter file with zeros to match the longer one if needed, and automatically strips trailing zero bytes from the output to maintain exact file sizes during roundtrip operations.
 
-No installation required - this is a standalone Python script. Requires Python 3.6+.
+This tool is useful for:
+- Cryptographic analysis and research
+- Data transformation and recovery
+- Understanding XOR-based encryption schemes
+- One-time pad operations
+- Security research and education
+
+## Quick Start
+
+### Building from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/username/xor
+cd xor
+
+# Build the C version
+make
+
+# Test the installation
+make test
+```
+
+### Installation
+
+#### macOS (Homebrew)
+```bash
+brew install xor
+```
+
+#### Linux (from source)
+```bash
+make
+sudo make install
+```
+
 
 ## Usage
 
-### Basic XOR Operation
-
-XOR two files together:
+### Basic XOR Operations
 
 ```bash
 # XOR two files
-./xor.py file1.bin file2.bin > result.bin
+xor file1.bin file2.bin > result.bin
 
-# Using stdin for one file
-cat file1.bin | ./xor.py - file2.bin > result.bin
+# Use stdin for input
+cat file1.bin | xor - file2.bin > result.bin
 
-# Using stdin for both files (not supported)
-# ./xor.py - -  # This will give an error
+# Preserve trailing zeros
+xor -z file1.bin file2.bin > result.bin
+
+# Show progress for large files
+xor -p large1.bin large2.bin > result.bin
 ```
 
-## XOR Properties
-
-The XOR tool applies a fundamental mathematical property: **if result = A ⊕ B, then A = result ⊕ B and B = result ⊕ A**.
-
-This creates a symetric mathematical relationship between these three files. Any two of them can be XOR'd together to produce the third:
-
-```bash
-# Generate XOR result from two files
-./xor.py fileA.bin fileB.bin > result.bin
-
-# Use result + fileB to recover fileA
-./xor.py result.bin fileB.bin > recovered_A.bin
-
-# Use result + fileA to recover fileB  
-./xor.py result.bin fileA.bin > recovered_B.bin
-
-# Verify: all recovered files match originals
-cmp fileA.bin recovered_A.bin      # Should match
-cmp fileB.bin recovered_B.bin      # Should match
-```
-
-## Command Line Options
+### Command Line Options
 
 ```
 usage: xor [-h] [-p] [-z] [--version] file file
@@ -71,107 +86,212 @@ options:
   --version             show program's version number and exit
 ```
 
+## XOR Properties
+
+The XOR tool applies a fundamental mathematical property: **if result = A ⊕ B, then A = result ⊕ B and B = result ⊕ A**.
+
+This means any two of the three components can be used to recover the third:
+
+```bash
+# Generate XOR result from two files
+xor fileA.bin fileB.bin > result.bin
+
+# Use result + fileB to recover fileA
+xor result.bin fileB.bin > recovered_A.bin
+
+# Use result + fileA to recover fileB
+xor result.bin fileA.bin > recovered_B.bin
+
+# Verify: all recovered files match originals
+cmp fileA.bin recovered_A.bin      # Should match
+cmp fileB.bin recovered_B.bin      # Should match
+```
+
 ## Examples
 
-### Basic XOR Operations
+### One-Time Pad Encryption
 
 ```bash
-# XOR two files
-./xor.py plaintext.txt ciphertext.txt > key.bin
+# Generate a random key exactly the same size as your data
+dd if=/dev/urandom of=key.bin bs=1 count=$(wc -c < secret.txt | tr -d ' ')
 
-# Recover original by XORing result with one of the inputs
-./xor.py key.bin ciphertext.txt > recovered_plaintext.txt
-./xor.py key.bin plaintext.txt > recovered_ciphertext.txt
+# Encrypt your data
+xor secret.txt key.bin > encrypted.bin
+
+# Decrypt your data
+xor encrypted.bin key.bin > decrypted.txt
+
+# Verify
+cmp secret.txt decrypted.txt && echo "Perfect match!"
 ```
 
-### Using Base64 for Text-Safe Key Storage
-
-Since XOR results contain binary data, you can use base64 encoding to store keys in text format:
+### Working with Different File Sizes
 
 ```bash
-# Generate XOR result and encode as base64 text
-./xor.py rick.jpg nonsense.jpg | base64 > key.txt
+# XOR files of different sizes (shorter is zero-padded)
+xor small_file.txt large_file.bin > result.bin
 
-# Use process substitution to decode base64 key on-the-fly
-./xor.py nonsense.jpg <(base64 -d -i key.txt) > recovered_rick.jpg
-
-# Verify the roundtrip worked
-cmp rick.jpg recovered_rick.jpg && echo "Perfect match!"
+# Preserve trailing zeros if needed for your use case
+xor -z small_file.txt large_file.bin > result_with_zeros.bin
 ```
 
-This approach is useful when you need to store binary XOR keys in text-only systems like databases, configuration files, or version control.
-
-### Progress Mode
-
-For large files, use progress mode to monitor processing:
+### Pipeline Integration
 
 ```bash
-# Show progress information
-./xor.py -p large_file1.bin large_file2.bin > result.bin
+# Chain with other Unix tools
+cat data.bin | xor - key.bin | base64 > encrypted.txt
+
+# Decrypt from base64
+base64 -d encrypted.txt | xor - key.bin > recovered.bin
 ```
 
-### Preserve Trailing Zeros
+### Python Version
 
-By default, the tool strips trailing zero bytes from output to maintain exact file sizes during roundtrip operations. Use the `-z` flag to preserve these bytes:
+Prefer having the source code in Python instead of C? Ok, just `xor` the C code with a base64 decoded version of the following key:
+
+```
+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pCEtMS35JT04AQVMARRoqAAAAAAAARVgNHU1tPmshMTYtMyYmJzZNG29SUk9SGgBbRV0CCSoqKklGQi06DwpWb39/AB0dAAJ/f01BSQ0+LEcaLVAHGipNQUlOCAkgICAgICAgICAgc2hvd19wcm9ncmVzcyA9IHRydWU7CiAgICAgICAgICAgICAgICBicmVhazsKICAgICAgICAgICAgY2FzZSAneic6CiAgICAgICAgICAgICAgICBwcmVzZXJ2ZV96ZXJvcyA9IHRydWU7CiAgICAgICAgICAgICAgICBicmVhazsKICAgICAgICAgICAgY2FzZSAnVic6CiAgICAgICAgICAgICAgICBzaG93X3ZlcnNpb24oKTsKICAgICAgICAgICAgICAgIGV4aXQoRVhJVF9TVUNDRVNTKTsKICAgICAgICAgICAgICAgIGJyZWFrOwogICAgICAgICAgICBjYXNlICc/JzoKICAgICAgICAgICAgICAgIGV4aXQoRVhJVF9VU0FHRSk7CiAgICAgICAgICAgICAgICBicmVhazsKICAgICAgICAgICAgZGVmYXVsdDoKICAgICAgICAgICAgICAgIGV4aXQoRVhJVF9VU0FHRSk7CiAgICAgICAgICAgICAgICBicmVhazsKICAgICAgICB9CiAgICB9CiAgICAKICAgIC8vIENoZWNrIGZvciByZXF1aXJlZCBwb3NpdGlvbmFsIGFyZ3VtZW50cwogICAgaWYgKGFyZ2MgLSBvcHRpbmQgIT0gMikgewogICAgICAgIGZwcmludGYoc3RkZXJyLCAiJXM6IGVycm9yOiByZXF1aXJlcyBleGFjdGx5IHR3byBmaWxlIGFyZ3VtZW50c1xuIiwgUFJPR19OQU1FKTsKICAgICAgICBmcHJpbnRmKHN0ZGVyciwgIlRyeSAnJXMgLS1oZWxwJyBmb3IgbW9yZSBpbmZvcm1hdGlvbi5cbiIsIFBST0dfTkFNRSk7CiAgICAgICAgZXhpdChFWElUX1VTQUdFKTsKICAgIH0KICAgIAogICAgY29uc3QgY2hhciAqZmlsZTEgPSBhcmd2W29wdGluZF07CiAgICBjb25zdCBjaGFyICpmaWxlMiA9IGFyZ3Zbb3B0aW5kICsgMV07CiAgICAKICAgIC8vIFZhbGlkYXRlIGFyZ3VtZW50cwogICAgdmFsaWRhdGVfZmlsZV9hY2Nlc3MoZmlsZTEsICJmaXJzdCBpbnB1dCBmaWxlIik7CiAgICB2YWxpZGF0ZV9maWxlX2FjY2VzcyhmaWxlMiwgInNlY29uZCBpbnB1dCBmaWxlIik7CiAgICAKICAgIC8vIENoZWNrIGZvciBzdGRpbiBjb25mbGljdHMKICAgIGludCBzdGRpbl9jb3VudCA9IDA7CiAgICBpZiAoc3RyY21wKGZpbGUxLCAiLSIpID09IDApIHN0ZGluX2NvdW50Kys7CiAgICBpZiAoc3RyY21wKGZpbGUyLCAiLSIpID09IDApIHN0ZGluX2NvdW50Kys7CiAgICAKICAgIGlmIChzdGRpbl9jb3VudCA+IDEpIHsKICAgICAgICBkaWUoImNhbm5vdCByZWFkIG11bHRpcGxlIGZpbGVzIGZyb20gc3RkaW4iLCBFWElUX1VTQUdFKTsKICAgIH0KICAgIAogICAgLy8gQ2hlY2sgZm9yIHNhbWUgZmlsZQogICAgaWYgKGlzX3NhbWVfZmlsZShmaWxlMSwgZmlsZTIpKSB7CiAgICAgICAgZGllKCJjYW5ub3QgdXNlIHRoZSBzYW1lIGZpbGUgZm9yIGJvdGggaW5wdXRzIiwgRVhJVF9VU0FHRSk7CiAgICB9CiAgICAKICAgIC8vIFhPUiB0aGUgZmlsZXMKICAgIHhvcl9maWxlcyhmaWxlMSwgZmlsZTIpOwogICAgCiAgICByZXR1cm4gRVhJVF9TVUNDRVNTOwp9Cg==
+
+```
+
+Copy that ^^ key , then on a Mac you can run a command like this: 
 
 ```bash
-# Preserve trailing zeros in output
-./xor.py -z small_file.bin large_file.bin > result_large_with_zeros.bin
-
-# Compare with default behavior
-./xor.py small_file.bin large_file.bin > result_maybe_medium_stripped.bin
-
-# The version that preserved trailing zeros may be larger
-ls -la result_*.bin
+./xor ./xor.c <(pbpaste | base64 -d) > xor.py
 ```
 
-This is useful when you need to maintain exact byte-for-byte output lengths or when working with file formats that require specific padding.
+(or you can save it to a local file named `c_to_python.key` and run `./xor ./xor.c <(cat c_to_python.key | base64 -d) > xor.py`)
 
-Note that stripping zeroes means that if the larger of the input files ends with zero bytes, then the resulting key will not be as long as the larger file. 
+Oh, you want a python-specific version of this README also? XOR this `README.md` with `python_readme.key` like this:
 
-### Practical Applications
-
-**Sharing Sensitive Data**: Create a one-time pad to perfectly encrypt data.
-
-If two parties need to share a file, they can agree on some public asset to use as the key. The asset should be at least as large as the shared file, or else any data longer than the key will be left unaltered! Having chosen an asset to use as the key, XOR it with the file to be shared. The resulting output can be shared and XOR applied to the shared output on the receiving end to output the original file.
-
-Note: to achieve cryptographic levels of data security, the key must be entirely random data produced from a high-quality cryptographic random number generator. Anything less will leave statical patterns in the resulting data which can be used to crack the encryption.
+```bash
+./xor README.md python_readme.key > PYTHON_README.md
+```
 
 ## Technical Details
 
-- **File Padding**: Shorter files are zero-padded to match the longer file during XOR
-- **Trailing Zero Handling**: Output automatically strips trailing zeros for exact roundtrip recovery (use `-z` to preserve)
-- **Streaming I/O**: Memory-efficient streaming processes files of any size without loading into RAM  
-- **Binary Safe**: Handles arbitrary binary data correctly
-- **Process Substitution**: Supports shell process substitution for on-the-fly transformations
-- **Progress Mode**: Use `-p` to show processing progress for large files
-- **Unix Philosophy**: Reads stdin, writes to stdout, composable with pipes
+### Performance
+- **Optimized Performance**: Fast C implementation with 64KB streaming chunks
+- **Memory Efficient**: Processes files larger than available RAM
+- **Cross-Platform**: Tested on macOS, Linux, and other Unix systems
 
-## Testing
+### Features
+- **File Padding**: Shorter files are zero-padded to match longer files
+- **Zero Handling**: Automatically strips trailing zeros (use `-z` to preserve)
+- **Streaming I/O**: Memory-efficient processing of large files
+- **Progress Reporting**: Use `-p` for progress updates on large operations
+- **Signal Handling**: Graceful handling of interrupts and signals
+- **Binary Safe**: Correctly handles arbitrary binary data
+- **Unix Philosophy**: Reads stdin, writes stdout, composable with pipes
 
-Run the comprehensive test suite to verify functionality:
+## Development
+
+### Building
 
 ```bash
-./test_xor.sh
+# Standard build
+make
+
+# Debug build
+make debug
+
+# Run tests
+make test
+
+# Clean build artifacts
+make clean
 ```
 
-This test suite validates:
-- Core XOR functionality and data integrity
-- Different length file combinations and zero padding
-- XOR mathematical properties and roundtrip operations
-- Progress mode and streaming I/O
-- Argument validation and error handling
+### Project Structure
+
+```
+xor/
+├── xor.c              # C implementation
+├── Makefile           # Build system
+├── README.md          # This file
+├── LICENSE            # BSD 3-Clause License
+└── test_xor.sh        # Test suite
+```
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+### Testing
+
+The test suite validates:
+- Core XOR functionality and mathematical properties
+- File padding and zero handling
+- Progress reporting and streaming I/O
+- Error handling and argument validation
 - stdin/stdout integration
 - Edge cases (empty files, single bytes, etc.)
 
-## Use Cases
+```bash
+# Run the scripted test suite
+./test_xor.sh
 
-- **Cryptanalysis**: Generate keys from known plaintext/ciphertext pairs
-- **Data Recovery**: Apply XOR operations to encrypted data
-- **Security Research**: Analyze XOR-based encryption schemes
-- **File Transformation**: Apply XOR patterns to data
-- **One-time Pad Operations**: Implement perfect secrecy schemes
+# Run Makefile tests
+make test
+```
+
+## Installation for Package Managers
+
+### Homebrew Formula (macOS)
+
+```ruby
+class Xor < Formula
+  desc "Fast Unix-style XOR utility for cryptographic operations"
+  homepage "https://github.com/username/xor"
+  url "https://github.com/username/xor/archive/v1.0.0.tar.gz"
+  sha256 "..." # Will be generated
+  license "BSD-3-Clause"
+
+  def install
+    system "make"
+    bin.install "xor"
+  end
+
+  test do
+    system "#{bin}/xor", "--version"
+  end
+end
+```
+
+### APT Package (Debian/Ubuntu)
+
+The tool can be packaged for Debian/Ubuntu using standard packaging tools:
+
+```bash
+# Build dependencies
+sudo apt-get install build-essential
+
+# Build and install
+make
+sudo make install
+```
 
 ## Security Notice
 
 This tool is intended for legitimate security research, cryptanalysis, and educational purposes. Users are responsible for ensuring their use complies with applicable laws and regulations.
+
+**Important**: For cryptographically secure operations, use high-quality random data as keys. Predictable or patterned keys will leave statistical traces that can compromise security.
+
+## License
+
+This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
+
+## Version History
+
+- **1.0.0**: Initial release
+  - Core XOR functionality
+  - Streaming I/O with 64KB chunks
+  - Progress reporting
+  - Zero preservation option
+  - Comprehensive test suite
+  - Cross-platform compatibility

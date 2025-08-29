@@ -38,7 +38,7 @@ test_error() {
     
     echo -ne "${YELLOW}Testing error: $name${NC} ... "
     
-    if output=$(python3 "${cmd[@]}" 2>&1); then
+    if output=$("${cmd[@]}" 2>&1); then
         fail_test "$name - expected error but command succeeded"
         echo "  Output: $output"
     else
@@ -60,13 +60,13 @@ test_roundtrip() {
     echo -e "${YELLOW}Testing: $name${NC}"
     
     # XOR file1 and file2 to get result
-    python3 xor.py "$file1" "$file2" > xor_result.tmp
+    ./xor "$file1" "$file2" > xor_result.tmp
     
     # XOR result with file2 to recover file1
-    python3 xor.py xor_result.tmp "$file2" > recovered_file1.tmp
+    ./xor xor_result.tmp "$file2" > recovered_file1.tmp
     
     # XOR result with file1 to recover file2
-    python3 xor.py xor_result.tmp "$file1" > recovered_file2.tmp
+    ./xor xor_result.tmp "$file1" > recovered_file2.tmp
     
     # Compare sizes to determine expected behavior
     local size1=$(wc -c < "$file1")
@@ -135,17 +135,17 @@ echo -e "${BLUE}=== Argument Validation Tests ===${NC}"
 echo
 
 # Error tests
-test_error "No arguments" "the following arguments are required: files" xor.py
-test_error "One argument only" "the following arguments are required: files" xor.py test_text.tmp
-test_error "Too many arguments" "unrecognized arguments" xor.py test_text.tmp test_binary.tmp test_multiline.tmp
-test_error "Nonexistent first file" "first input file not found" xor.py nonexistent.tmp test_text.tmp
-test_error "Nonexistent second file" "second input file not found" xor.py test_text.tmp nonexistent.tmp
-test_error "Same file twice" "cannot use the same file for both inputs" xor.py test_text.tmp test_text.tmp
+test_error "No arguments" "requires exactly two file arguments" ./xor
+test_error "One argument only" "requires exactly two file arguments" ./xor test_text.tmp
+test_error "Too many arguments" "requires exactly two file arguments" ./xor test_text.tmp test_binary.tmp test_multiline.tmp
+test_error "Nonexistent first file" "first input file not found" ./xor nonexistent.tmp test_text.tmp
+test_error "Nonexistent second file" "second input file not found" ./xor test_text.tmp nonexistent.tmp
+test_error "Same file twice" "cannot use the same file for both inputs" ./xor test_text.tmp test_text.tmp
 
 # Create directory for testing
 mkdir -p testdir
-test_error "Directory as first file" "first input file is not a readable file" xor.py testdir test_text.tmp
-test_error "Directory as second file" "second input file is not a readable file" xor.py test_text.tmp testdir
+test_error "Directory as first file" "first input file is not a readable file" ./xor testdir test_text.tmp
+test_error "Directory as second file" "second input file is not a readable file" ./xor test_text.tmp testdir
 
 echo
 echo -e "${BLUE}=== stdin/stdout Tests ===${NC}"
@@ -153,9 +153,9 @@ echo
 
 # Test stdin for first file
 echo -ne "${YELLOW}Testing: stdin for first file${NC} ... "
-if echo -n "stdin_test" | python3 xor.py - test_text.tmp > stdin_result1.tmp; then
+if echo -n "stdin_test" | ./xor - test_text.tmp > stdin_result1.tmp; then
     # Verify we can recover the original
-    if python3 xor.py stdin_result1.tmp test_text.tmp > recovered_stdin1.tmp; then
+    if ./xor stdin_result1.tmp test_text.tmp > recovered_stdin1.tmp; then
         # With zero stripping, recovered should match original exactly
         echo -n "stdin_test" > expected_stdin.tmp
         
@@ -173,9 +173,9 @@ fi
 
 # Test stdin for second file
 echo -ne "${YELLOW}Testing: stdin for second file${NC} ... "
-if echo -n "stdin_test2" | python3 xor.py test_text.tmp - > stdin_result2.tmp; then
+if echo -n "stdin_test2" | ./xor test_text.tmp - > stdin_result2.tmp; then
     # Verify we can recover the original
-    if python3 xor.py stdin_result2.tmp test_text.tmp > recovered_stdin2.tmp; then
+    if ./xor stdin_result2.tmp test_text.tmp > recovered_stdin2.tmp; then
         # Create expected result (stdin_test2 padded to match test_text.tmp length)
         echo -n "stdin_test2" > expected_stdin2.tmp
         text_size=$(wc -c < test_text.tmp)
@@ -197,7 +197,7 @@ else
 fi
 
 # Test error: both files from stdin
-test_error "Both files from stdin" "cannot read multiple files from stdin" xor.py - -
+test_error "Both files from stdin" "cannot read multiple files from stdin" ./xor - -
 
 echo
 echo -e "${BLUE}=== Progress Mode Tests ===${NC}"
@@ -205,7 +205,7 @@ echo
 
 # Test progress mode
 echo -ne "${YELLOW}Testing: Progress mode${NC} ... "
-if python3 xor.py -p test_text.tmp test_binary.tmp > /dev/null 2>progress_output.tmp; then
+if ./xor -p test_text.tmp test_binary.tmp > /dev/null 2>progress_output.tmp; then
     if grep -q "reading file" progress_output.tmp; then
         pass_test "Progress mode"
     else
@@ -225,9 +225,9 @@ echo
 
 # Test preserve zeros option
 echo -ne "${YELLOW}Testing: Preserve zeros short option${NC} ... "
-if python3 xor.py -z test_text.tmp test_binary.tmp > preserve_result1.tmp 2>/dev/null; then
+if ./xor -z test_text.tmp test_binary.tmp > preserve_result1.tmp 2>/dev/null; then
     # Test without preserve zeros for comparison
-    python3 xor.py test_text.tmp test_binary.tmp > normal_result1.tmp 2>/dev/null
+    ./xor test_text.tmp test_binary.tmp > normal_result1.tmp 2>/dev/null
     
     # With preserve zeros, result should be longer or same size
     preserve_size=$(wc -c < preserve_result1.tmp)
@@ -243,7 +243,7 @@ else
 fi
 
 echo -ne "${YELLOW}Testing: Preserve zeros long option${NC} ... "
-if python3 xor.py --preserve-zeros test_text.tmp test_binary.tmp > preserve_result2.tmp 2>/dev/null; then
+if ./xor --preserve-zeros test_text.tmp test_binary.tmp > preserve_result2.tmp 2>/dev/null; then
     # Compare with short option result - should be identical
     if cmp -s preserve_result1.tmp preserve_result2.tmp; then
         pass_test "Preserve zeros long option (--preserve-zeros)"
@@ -259,8 +259,8 @@ echo -ne "${YELLOW}Testing: Preserve zeros with different sized files${NC} ... "
 printf 'short' > short_file.tmp
 printf 'longer_file_with_content' > long_file.tmp
 
-if python3 xor.py -z short_file.tmp long_file.tmp > preserve_diff_result.tmp 2>/dev/null; then
-    python3 xor.py short_file.tmp long_file.tmp > normal_diff_result.tmp 2>/dev/null
+if ./xor -z short_file.tmp long_file.tmp > preserve_diff_result.tmp 2>/dev/null; then
+    ./xor short_file.tmp long_file.tmp > normal_diff_result.tmp 2>/dev/null
     
     preserve_diff_size=$(wc -c < preserve_diff_result.tmp)
     normal_diff_size=$(wc -c < normal_diff_result.tmp)
