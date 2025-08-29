@@ -27,6 +27,7 @@ This tool is useful for:
 
 #### macOS (Homebrew)
 ```bash
+brew tap rrwright/xor
 brew install xor
 ```
 
@@ -34,7 +35,7 @@ brew install xor
 
 ```bash
 # Clone the repository
-git clone https://github.com/username/xor
+git clone https://github.com/rrwright/xor
 cd xor
 
 # Build the C version
