@@ -9,7 +9,7 @@ A fast Unix-style command-line utility for XOR operations on files.
 The XOR tool performs XOR operations on two files. 
 
 ```bash
-./xor nonsense.jpg key.bin > out.jpg
+xor nonsense.jpg key.bin > out.jpg
 ```
 
 By default, this tool pads the shorter file with zeros to match the longer one if needed, and automatically strips trailing zero bytes from the output to maintain exact file sizes during roundtrip operations.
