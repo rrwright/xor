@@ -23,7 +23,14 @@ This tool is useful for:
 
 ## Quick Start
 
-### Building from Source
+### Installation
+
+#### macOS (Homebrew)
+```bash
+brew install xor
+```
+
+#### Linux (from source)
 
 ```bash
 # Clone the repository
@@ -35,21 +42,9 @@ make
 
 # Test the installation
 make test
-```
 
-### Installation
-
-#### macOS (Homebrew)
-```bash
-brew install xor
-```
-
-#### Linux (from source)
-```bash
-make
 sudo make install
 ```
-
 
 ## Usage
 
@@ -238,42 +233,6 @@ The test suite validates:
 
 # Run Makefile tests
 make test
-```
-
-## Installation for Package Managers
-
-### Homebrew Formula (macOS)
-
-```ruby
-class Xor < Formula
-  desc "Fast Unix-style XOR utility for cryptographic operations"
-  homepage "https://github.com/username/xor"
-  url "https://github.com/username/xor/archive/v1.0.0.tar.gz"
-  sha256 "..." # Will be generated
-  license "BSD-3-Clause"
-
-  def install
-    system "make"
-    bin.install "xor"
-  end
-
-  test do
-    system "#{bin}/xor", "--version"
-  end
-end
-```
-
-### APT Package (Debian/Ubuntu)
-
-The tool can be packaged for Debian/Ubuntu using standard packaging tools:
-
-```bash
-# Build dependencies
-sudo apt-get install build-essential
-
-# Build and install
-make
-sudo make install
 ```
 
 ## Security Notice
