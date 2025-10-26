@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XOR Tool - Web Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            color: #555;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .info-box code {
+            background: #e0e7ff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result-section {
+            background: #f9fafb;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .result-section h3 {
+            color: #444;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        #result {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #333;
+            white-space: pre-wrap;
+            word-break: break-all;
+            min-height: 60px;
+            line-height: 1.6;
+        }
+
+        .result-empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        .example-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .example-section h3 {
+            color: #444;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .example-section p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .example-buttons {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .example-btn {
+            background: #f0f4ff;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .format-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .format-badge.base64 {
+            background: #3b82f6;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .result-title {
+            color: #444;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+
+        .copy-btn:active {
+            transform: none;
+        }
+
+        .copy-btn.copied {
+            background: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>XOR Tool - Web Version</h1>
+        <p class="subtitle">XOR two strings together with automatic zero-padding and stripping</p>
+
+        <div class="info-box">
+            <h3>XOR Properties & Smart Encoding</h3>
+            <p>
+                If <code>result = A ⊕ B</code>, then <code>A = result ⊕ B</code> and <code>B = result ⊕ A</code>
+                <br>
+                This means any two of the three values can generate the third. The XOR operation is symmetric and reversible.
+            </p>
+            <p style="margin-top: 10px;">
+                <strong>Automatic Base64 handling:</strong> Input is auto-detected as base64 or text. Results are shown as text when possible,
+                otherwise as base64. You can copy base64 results and paste them back as input - they'll be automatically decoded!
+            </p>
+        </div>
+
+        <div class="input-section">
+            <label for="input1">
+                String 1:
+                <span id="badge1" class="format-badge" style="display: none;"></span>
+            </label>
+            <textarea id="input1" rows="4" placeholder="Enter first string (text or base64)..."></textarea>
+        </div>
+
+        <div class="input-section">
+            <label for="input2">
+                String 2:
+                <span id="badge2" class="format-badge" style="display: none;"></span>
+            </label>
+            <textarea id="input2" rows="4" placeholder="Enter second string (text or base64)..."></textarea>
+        </div>
+
+        <div class="button-container">
+            <button onclick="performXOR()">XOR Strings</button>
+        </div>
+
+        <div class="result-section">
+            <div class="result-header">
+                <div class="result-title">
+                    Result:
+                    <span id="result-badge" class="format-badge" style="display: none;"></span>
+                </div>
+                <button id="copy-btn" class="copy-btn" onclick="copyResult()" style="display: none;">Copy</button>
+            </div>
+            <div id="result" class="result-empty">XOR result will appear here...</div>
+        </div>
+
+        <div class="example-section">
+            <h3>Quick Examples</h3>
+            <p>Try these example scenarios to see how XOR works:</p>
+            <div class="example-buttons">
+                <button class="example-btn" onclick="loadExample1()">Example 1: Encrypt/Decrypt</button>
+                <button class="example-btn" onclick="loadExample2()">Example 2: Key Recovery</button>
+                <button class="example-btn" onclick="clearAll()">Clear All</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store the current result for copying
+        let currentResult = '';
+
+        /**
+         * Strict base64 validation
+         * Returns true only if the string is valid base64 with correct padding and can be decoded
+         */
+        function isValidBase64(str) {
+            // Empty string is not base64
+            if (!str || str.trim() === '') {
+                return false;
+            }
+
+            // Remove whitespace
+            str = str.trim();
+
+            // Check length is multiple of 4
+            if (str.length % 4 !== 0) {
+                return false;
+            }
+
+            // Base64 regex: only valid base64 characters
+            const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+            if (!base64Regex.test(str)) {
+                return false;
+            }
+
+            // Check padding rules
+            const paddingCount = (str.match(/=/g) || []).length;
+            if (paddingCount > 2) {
+                return false;
+            }
+
+            // Padding can only be at the end
+            const firstPadIndex = str.indexOf('=');
+            if (firstPadIndex !== -1 && firstPadIndex !== str.length - paddingCount) {
+                return false;
+            }
+
+            // Try to decode - if it fails, it's not valid base64
+            try {
+                const decoded = atob(str);
+                // Successfully decoded
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        /**
+         * Convert a string to a Uint8Array (UTF-8 encoding)
+         */
+        function stringToBytes(str) {
+            const encoder = new TextEncoder();
+            return encoder.encode(str);
+        }
+
+        /**
+         * Convert a Uint8Array to a string (UTF-8 decoding)
+         * Returns null if decoding fails (invalid UTF-8)
+         */
+        function bytesToString(bytes) {
+            try {
+                const decoder = new TextDecoder('utf-8', { fatal: true });
+                return decoder.decode(bytes);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        /**
+         * Check if byte array contains non-printable characters
+         * Returns true if there are null bytes, control characters, or other non-printable chars
+         */
+        function hasNonPrintableChars(bytes) {
+            for (let i = 0; i < bytes.length; i++) {
+                const byte = bytes[i];
+                // Null byte
+                if (byte === 0x00) {
+                    return true;
+                }
+                // Control characters (except tab, newline, carriage return)
+                if (byte < 0x20 && byte !== 0x09 && byte !== 0x0A && byte !== 0x0D) {
+                    return true;
+                }
+                // DEL character
+                if (byte === 0x7F) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Convert base64 string to Uint8Array
+         */
+        function base64ToBytes(base64Str) {
+            const binaryString = atob(base64Str);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        /**
+         * Convert Uint8Array to base64 string
+         */
+        function bytesToBase64(bytes) {
+            let binaryString = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binaryString += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binaryString);
+        }
+
+        /**
+         * Process input string: auto-detect and decode base64, or treat as UTF-8 text
+         * Returns { bytes: Uint8Array, isBase64: boolean }
+         */
+        function processInput(str) {
+            if (isValidBase64(str)) {
+                return {
+                    bytes: base64ToBytes(str.trim()),
+                    isBase64: true
+                };
+            } else {
+                return {
+                    bytes: stringToBytes(str),
+                    isBase64: false
+                };
+            }
+        }
+
+        /**
+         * XOR two byte arrays together
+         * Pads the shorter array with zeros to match the longer one
+         * Strips trailing zero bytes from the result
+         */
+        function xorBytes(bytes1, bytes2) {
+            // Determine the maximum length
+            const maxLen = Math.max(bytes1.length, bytes2.length);
+
+            // Create result array
+            const result = new Uint8Array(maxLen);
+
+            // XOR byte by byte, treating missing bytes as zero
+            for (let i = 0; i < maxLen; i++) {
+                const b1 = i < bytes1.length ? bytes1[i] : 0;
+                const b2 = i < bytes2.length ? bytes2[i] : 0;
+                result[i] = b1 ^ b2;
+            }
+
+            // Strip trailing zero bytes
+            let endIndex = result.length;
+            while (endIndex > 0 && result[endIndex - 1] === 0) {
+                endIndex--;
+            }
+
+            // Return the trimmed result
+            return result.slice(0, endIndex);
+        }
+
+        /**
+         * Update format badge for an input
+         */
+        function updateBadge(badgeId, isBase64) {
+            const badge = document.getElementById(badgeId);
+            if (isBase64) {
+                badge.textContent = 'Base64';
+                badge.className = 'format-badge base64';
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        /**
+         * Update result badge
+         */
+        function updateResultBadge(format) {
+            const badge = document.getElementById('result-badge');
+            if (format === 'text') {
+                badge.textContent = 'Text';
+                badge.className = 'format-badge';
+                badge.style.display = 'inline-block';
+            } else if (format === 'base64') {
+                badge.textContent = 'Base64';
+                badge.className = 'format-badge base64';
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        /**
+         * Main XOR operation
+         */
+        function performXOR() {
+            // Get input values
+            const input1 = document.getElementById('input1').value;
+            const input2 = document.getElementById('input2').value;
+            const resultDiv = document.getElementById('result');
+            const copyBtn = document.getElementById('copy-btn');
+
+            // Handle empty inputs
+            if (!input1 && !input2) {
+                resultDiv.textContent = 'Please enter at least one string.';
+                resultDiv.className = 'result-empty';
+                copyBtn.style.display = 'none';
+                updateResultBadge(null);
+                updateBadge('badge1', false);
+                updateBadge('badge2', false);
+                return;
+            }
+
+            // Process inputs (auto-detect base64)
+            const processed1 = processInput(input1);
+            const processed2 = processInput(input2);
+
+            // Update input badges
+            updateBadge('badge1', processed1.isBase64);
+            updateBadge('badge2', processed2.isBase64);
+
+            // Perform XOR
+            const resultBytes = xorBytes(processed1.bytes, processed2.bytes);
+
+            // Handle empty result
+            if (resultBytes.length === 0) {
+                resultDiv.textContent = '(empty - all zeros stripped)';
+                resultDiv.className = 'result-empty';
+                copyBtn.style.display = 'none';
+                updateResultBadge(null);
+                currentResult = '';
+                return;
+            }
+
+            // Try to display as text first (only if valid UTF-8 and all printable)
+            const asText = bytesToString(resultBytes);
+            const hasBinaryData = hasNonPrintableChars(resultBytes);
+
+            if (asText !== null && !hasBinaryData) {
+                // Valid UTF-8 with all printable characters - display as text
+                resultDiv.textContent = asText;
+                resultDiv.className = '';
+                updateResultBadge('text');
+                currentResult = asText;
+            } else {
+                // Invalid UTF-8 or contains non-printable chars - display as base64
+                const asBase64 = bytesToBase64(resultBytes);
+                resultDiv.textContent = asBase64;
+                resultDiv.className = '';
+                updateResultBadge('base64');
+                currentResult = asBase64;
+            }
+
+            // Show copy button
+            copyBtn.style.display = 'block';
+            copyBtn.textContent = 'Copy';
+            copyBtn.className = 'copy-btn';
+        }
+
+        /**
+         * Copy result to clipboard
+         */
+        function copyResult() {
+            const copyBtn = document.getElementById('copy-btn');
+
+            navigator.clipboard.writeText(currentResult).then(() => {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.className = 'copy-btn copied';
+
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                    copyBtn.className = 'copy-btn';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                copyBtn.textContent = 'Failed';
+            });
+        }
+
+        /**
+         * Example 1: Demonstrate encryption and decryption
+         */
+        function loadExample1() {
+            document.getElementById('input1').value = 'Hello, World!';
+            document.getElementById('input2').value = 'secret_key';
+            document.getElementById('result').textContent = 'Click "XOR Strings" to encrypt. Then copy the result and paste it back as input with "secret_key" to decrypt!';
+            document.getElementById('result').className = 'result-empty';
+            document.getElementById('copy-btn').style.display = 'none';
+            updateResultBadge(null);
+            updateBadge('badge1', false);
+            updateBadge('badge2', false);
+        }
+
+        /**
+         * Example 2: Demonstrate key recovery
+         */
+        function loadExample2() {
+            document.getElementById('input1').value = 'plaintext';
+            document.getElementById('input2').value = 'ciphertext';
+            document.getElementById('result').textContent = 'Click "XOR Strings" to generate the key. Then XOR the result with either input to recover the other!';
+            document.getElementById('result').className = 'result-empty';
+            document.getElementById('copy-btn').style.display = 'none';
+            updateResultBadge(null);
+            updateBadge('badge1', false);
+            updateBadge('badge2', false);
+        }
+
+        /**
+         * Clear all inputs and results
+         */
+        function clearAll() {
+            document.getElementById('input1').value = '';
+            document.getElementById('input2').value = '';
+            document.getElementById('result').textContent = 'XOR result will appear here...';
+            document.getElementById('result').className = 'result-empty';
+            document.getElementById('copy-btn').style.display = 'none';
+            updateResultBadge(null);
+            updateBadge('badge1', false);
+            updateBadge('badge2', false);
+            currentResult = '';
+        }
+
+        // Update badges on input change (debounced)
+        let debounceTimer1, debounceTimer2;
+
+        document.getElementById('input1').addEventListener('input', function() {
+            clearTimeout(debounceTimer1);
+            debounceTimer1 = setTimeout(() => {
+                const input = this.value;
+                if (input) {
+                    updateBadge('badge1', isValidBase64(input));
+                } else {
+                    updateBadge('badge1', false);
+                }
+            }, 300);
+        });
+
+        document.getElementById('input2').addEventListener('input', function() {
+            clearTimeout(debounceTimer2);
+            debounceTimer2 = setTimeout(() => {
+                const input = this.value;
+                if (input) {
+                    updateBadge('badge2', isValidBase64(input));
+                } else {
+                    updateBadge('badge2', false);
+                }
+            }, 300);
+        });
+
+        // Allow Enter key to trigger XOR (with Ctrl/Cmd modifier)
+        document.addEventListener('keydown', function(event) {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                performXOR();
+            }
+        });
+    </script>
+</body>
+</html>
