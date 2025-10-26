@@ -250,6 +250,33 @@
         .copy-btn.copied {
             background: #10b981;
         }
+
+        .random-btn {
+            display: none;
+            background: #f0f4ff;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .random-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .random-btn:active {
+            transform: none;
+        }
+
+        .random-btn.visible {
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -274,6 +301,7 @@
             <label for="input1">
                 String 1:
                 <span id="badge1" class="format-badge" style="display: none;"></span>
+                <button id="random-btn1" class="random-btn" onclick="generateRandomKey(1)">🎲 Random Key</button>
             </label>
             <textarea id="input1" rows="4" placeholder="Enter first string (text or base64)..."></textarea>
         </div>
@@ -282,6 +310,7 @@
             <label for="input2">
                 String 2:
                 <span id="badge2" class="format-badge" style="display: none;"></span>
+                <button id="random-btn2" class="random-btn" onclick="generateRandomKey(2)">🎲 Random Key</button>
             </label>
             <textarea id="input2" rows="4" placeholder="Enter second string (text or base64)..."></textarea>
         </div>
@@ -607,6 +636,7 @@
             updateResultBadge(null);
             updateBadge('badge1', false);
             updateBadge('badge2', false);
+            updateRandomButtonVisibility();
         }
 
         /**
@@ -621,6 +651,7 @@
             updateResultBadge(null);
             updateBadge('badge1', false);
             updateBadge('badge2', false);
+            updateRandomButtonVisibility();
         }
 
         /**
@@ -635,10 +666,85 @@
             updateResultBadge(null);
             updateBadge('badge1', false);
             updateBadge('badge2', false);
+            updateRandomButtonVisibility();
             currentResult = '';
         }
 
-        // Update badges on input change (debounced)
+        /**
+         * Get the byte length of an input string (accounting for base64 decoding)
+         */
+        function getByteLength(str) {
+            if (!str) return 0;
+
+            const processed = processInput(str);
+            return processed.bytes.length;
+        }
+
+        /**
+         * Generate cryptographically random bytes
+         */
+        function generateRandomBytes(length) {
+            const bytes = new Uint8Array(length);
+            crypto.getRandomValues(bytes);
+            return bytes;
+        }
+
+        /**
+         * Generate a random key and fill the target input field
+         * @param {number} targetField - 1 or 2, indicating which field to fill
+         */
+        function generateRandomKey(targetField) {
+            const sourceField = targetField === 1 ? 2 : 1;
+            const sourceInput = document.getElementById(`input${sourceField}`).value;
+
+            // Get byte length of source
+            const byteLength = getByteLength(sourceInput);
+
+            if (byteLength === 0) {
+                return; // Safety check
+            }
+
+            // Generate random bytes
+            const randomBytes = generateRandomBytes(byteLength);
+
+            // Encode as base64
+            const randomBase64 = bytesToBase64(randomBytes);
+
+            // Fill target field
+            document.getElementById(`input${targetField}`).value = randomBase64;
+
+            // Update badge for target field
+            updateBadge(`badge${targetField}`, true);
+
+            // Update button visibility
+            updateRandomButtonVisibility();
+        }
+
+        /**
+         * Update visibility of random key buttons based on input state
+         */
+        function updateRandomButtonVisibility() {
+            const input1 = document.getElementById('input1').value;
+            const input2 = document.getElementById('input2').value;
+            const btn1 = document.getElementById('random-btn1');
+            const btn2 = document.getElementById('random-btn2');
+
+            // Show button 1 if input1 is empty and input2 has content
+            if (!input1 && input2) {
+                btn1.classList.add('visible');
+            } else {
+                btn1.classList.remove('visible');
+            }
+
+            // Show button 2 if input2 is empty and input1 has content
+            if (!input2 && input1) {
+                btn2.classList.add('visible');
+            } else {
+                btn2.classList.remove('visible');
+            }
+        }
+
+        // Update badges and random buttons on input change (debounced)
         let debounceTimer1, debounceTimer2;
 
         document.getElementById('input1').addEventListener('input', function() {
@@ -650,6 +756,7 @@
                 } else {
                     updateBadge('badge1', false);
                 }
+                updateRandomButtonVisibility();
             }, 300);
         });
 
@@ -662,6 +769,7 @@
                 } else {
                     updateBadge('badge2', false);
                 }
+                updateRandomButtonVisibility();
             }, 300);
         });
 
